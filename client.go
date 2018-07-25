@@ -14,6 +14,7 @@ import (
 	"golang.org/x/net/context/ctxhttp"
 
 	"gopkg.in/go-playground/validator.v9"
+	"github.com/prometheus/common/log"
 )
 
 var (
@@ -133,6 +134,10 @@ func (c *Client) get(ctx context.Context, path string, apiReq interface{}) (*htt
 		return nil, err
 	}
 	req.URL.RawQuery = q
+
+	// todo : remove me
+	log.Info(req.URL.String())
+
 	return ctxhttp.Do(ctx, c.httpClient, req)
 }
 
@@ -198,7 +203,8 @@ func (c *Client) post(ctx context.Context, path string, apiReq interface{}) (*ht
 func (c *Client) generateAuthQuery(path string, q url.Values) (string, error) {
 	if c.token != "" {
 		q.Set("token", c.token)
-		q.Set("expand", "venue,category,subcategories")
+		// todo : we should look to make expand dynamic
+		q.Set("expand", "venue,category,subcategories,event,attendees,refund_requests,survey,answers")
 		return q.Encode(), nil
 	}
 	return "", errors.New("eventbrite: Token missing")

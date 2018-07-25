@@ -3,6 +3,8 @@ package eventbrite
 import (
 	"fmt"
 	"golang.org/x/net/context"
+	"strings"
+	"github.com/prometheus/common/log"
 )
 
 // Order is an object representing an order made against Eventbrite for one or more ticket classes
@@ -26,9 +28,9 @@ type Order struct {
 	// Cost breakdown for this order
 	Costs OrderCosts `json:"costs"`
 	// The event this order is against
-	Event Event `json:"event"`
+	Event *Event `json:"event"`
 	// Refund request on this order
-	RefundRequests RefundRequest `json:"refund_requests"`
+	RefundRequests *RefundRequest `json:"refund_requests"`
 	//Attendees on this order
 	Attendees []Attendee `json:"attendees"`
 	// The event id this order is against
@@ -54,8 +56,14 @@ type OrderCosts struct {
 // OrderGet gets an order by ID an order object
 //
 // https://www.eventbrite.com/developer/v3/endpoints/orders/#ebapi-orders
-func (c *Client) OrderGet(ctx context.Context, id string) (*Order, error) {
+func (c *Client) OrderGet(ctx context.Context, id string, exps ...string) (*Order, error) {
 	o := new(Order)
+	path := fmt.Sprintf("/orders/%s/", id)
+	if len(exps) > 0 {
+		path = fmt.Sprintf("%s?expand=%s", path, strings.Join(exps, ","))
+	}
 
-	return o, c.getJSON(ctx, fmt.Sprintf("/orders/%s/", id), nil, o)
+	// todo : remove me
+	log.Info("path: ", path)
+	return o, c.getJSON(ctx, path, nil, o)
 }
